@@ -1,57 +1,118 @@
 # GitHub Activity & Contribution Generator
 
-A Python CLI tool to customize, backdate, and simulate Git commit histories and GitHub contribution activity graphs.
+A modern, customizable Python CLI tool to simulate Git commit activity and design natural GitHub contribution calendars.
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/hamzach9410/github-activity-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/hamzach9410/github-activity-generator/actions)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ---
 
-## Features
+## Visual Preview
 
-- **Custom Date Ranges**: Generate commits across any historical date range (`--start-date`, `--end-date`).
-- **Professional Weekday Scheduling**: Automatically filters out weekends by default to maintain natural developer work patterns.
-- **Natural Commit Volumes**: Configurable daily frequency bounds (`--min-commits`, `--max-commits`) preventing obvious robotic spikes.
+![GitHub Activity Generator CLI Demo](assets/demo.png)
+
+---
+
+## Key Features
+
+- **Custom Historical Date Ranges**: Generate commit histories across any range (`--start-date`, `--end-date`).
+- **Natural Weekday Scheduling**: Automatically filters out weekends (Saturday & Sunday) to replicate real developer work patterns.
+- **Configurable Daily Bounds**: Specify `--min-commits` and `--max-commits` to prevent unnatural volume spikes.
 - **Business Hours Distribution**: Commits are generated during realistic daylight and evening hours with randomized spacing.
-- **Dry-Run Preview**: Preview exact dates, frequencies, and messages before creating any Git commits.
-- **Zero External Dependencies**: Built entirely using Python's standard library.
+- **Dry-Run Preview**: Inspect dates, message previews, and volume counts before writing a single Git commit.
+- **Zero External Dependencies**: Pure Python standard library. Works out of the box with zero third-party packages.
 
 ---
 
-## Installation
+## Project Structure
 
-Clone the repository:
+```text
+github-activity-generator/
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # Automated CI test suite
+├── assets/
+│   └── demo.png               # Terminal preview screenshot
+├── src/
+│   └── github_activity_generator/
+│       ├── __init__.py        # Package exports & version
+│       ├── __main__.py        # python -m execution entry
+│       ├── cli.py             # Argument parsing & formatting
+│       ├── core.py            # Scheduling engine & Git runner
+│       └── constants.py       # Configuration & message pools
+├── tests/
+│   ├── __init__.py
+│   ├── test_cli.py            # CLI argument & date parsing tests
+│   └── test_core.py           # Core scheduling & monotonicity tests
+├── .gitignore
+├── generator.py               # Root quick-start wrapper
+├── LICENSE                    # MIT License
+├── pyproject.toml             # Standard PEP 621 packaging
+├── README.md                  # Documentation
+└── requirements-dev.txt       # Development dependencies
+```
+
+---
+
+## Quickstart
+
+### Option 1: Direct Clone & Run
 
 ```bash
 git clone https://github.com/hamzach9410/github-activity-generator.git
 cd github-activity-generator
 ```
 
-No external pip packages required. Runs on Python 3.8+.
-
----
-
-## Quickstart
-
-### 1. Preview with Dry-Run
-Preview the schedule without touching your Git repository:
+Run directly with Python:
 
 ```bash
+# Preview schedule with dry-run
 python3 generator.py --dry-run
-```
 
-### 2. Generate Commits for the Past 3 Months
-```bash
+# Run for past 90 days on weekdays
 python3 generator.py --start-date 2026-07-01 --end-date 2026-10-18
 ```
 
-### 3. Customize Daily Commit Frequency
+### Option 2: Install as Global CLI via Pip
+
 ```bash
-python3 generator.py --min-commits 1 --max-commits 4 --start-date 2026-01-01 --end-date 2026-06-30
+pip install -e .
 ```
 
-### 4. Push to Remote
-After generation, publish to your GitHub repository:
+Now you can run the command from any repository on your system:
+
+```bash
+github-activity-generator --dry-run
+github-activity-generator --start-date 2026-01-01 --end-date 2026-06-30 --min-commits 2 --max-commits 4
+```
+
+---
+
+## Usage Guide & Examples
+
+### 1. Safe Dry-Run (Always recommended first)
+Preview planned dates and messages without touching your Git repository:
+
+```bash
+python3 generator.py --start-date 2026-06-01 --end-date 2026-10-18 --dry-run
+```
+
+### 2. Generate Commits for a Custom Range
+```bash
+python3 generator.py --start-date 2026-01-01 --end-date 2026-06-30
+```
+
+### 3. Target a Specific Repository
+Specify the target repository folder using `--path`:
+
+```bash
+python3 generator.py --path /path/to/your/repo --start-date 2026-05-01 --end-date 2026-08-31
+```
+
+### 4. Push to GitHub
+After generation, push to your remote branch:
 
 ```bash
 git push origin main
@@ -61,21 +122,38 @@ git push origin main
 
 ## CLI Options
 
-| Flag | Type | Default | Description |
+| Option | Type | Default | Description |
 |---|---|---|---|
-| `--start-date` | `YYYY-MM-DD` | 180 days ago | Beginning of target commit range |
-| `--end-date` | `YYYY-MM-DD` | Today | End of target commit range |
-| `--min-commits` | `int` | `2` | Minimum commits on active days |
-| `--max-commits` | `int` | `5` | Maximum commits on active days |
-| `--include-weekends`| `flag` | `False` | Includes Saturday & Sunday (default: weekdays only) |
-| `--dry-run` | `flag` | `False` | Previews planned schedule without making commits |
-| `--path` | `str` | `.` | Target repository directory |
+| `--start-date` | `YYYY-MM-DD` | `90 days ago` | Target commit start date |
+| `--end-date` | `YYYY-MM-DD` | `Today` | Target commit end date |
+| `--min-commits` | `int` | `2` | Minimum commits per active day |
+| `--max-commits` | `int` | `5` | Maximum commits per active day |
+| `--include-weekends` | `flag` | `False` | Include Saturday & Sunday (default: weekdays only) |
+| `--dry-run` | `flag` | `False` | Preview commit plan without writing changes |
+| `--path` | `str` | `.` | Target Git repository directory |
+
+---
+
+## Running Tests
+
+Execute the automated test suite using `unittest`:
+
+```bash
+python3 -m unittest discover -s tests -p "test_*.py"
+```
+
+Or using `pytest`:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
 ---
 
 ## Disclaimer
 
-This utility is designed for Git workflow simulation, integration testing, and educational graph customization. Use responsibly on repositories you own or manage.
+This project is created for developer testing, simulation of Git contribution charts, and educational automation workflows. Please use responsibly on repositories you own or manage.
 
 ---
 

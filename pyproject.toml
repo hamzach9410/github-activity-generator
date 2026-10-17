@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "github-activity-generator"
+version = "1.0.0"
+authors = [
+  { name="Ali Hamza", email="2021ag9410@uaf.edu.pk" },
+]
+description = "A Python CLI tool to customize, backdate, and simulate Git commit histories and GitHub contribution activity graphs."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["git", "github", "commit-generator", "activity-graph", "contribution", "automation"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+
+[project.scripts]
+github-activity-generator = "github_activity_generator.cli:main"
+
+[project.urls]
+"Homepage" = "https://github.com/hamzach9410/github-activity-generator"
+"Bug Tracker" = "https://github.com/hamzach9410/github-activity-generator/issues"
