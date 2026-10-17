@@ -1,6 +1,6 @@
 # GitHub Activity & Contribution Generator
 
-A modern, customizable Python CLI tool to simulate Git commit activity and design natural GitHub contribution calendars.
+A modern, customizable Python CLI tool to simulate Git commit activity and design natural GitHub contribution calendars with realistic, multi-file commits.
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -17,11 +17,14 @@ A modern, customizable Python CLI tool to simulate Git commit activity and desig
 
 ## Key Features
 
+- **Multi-File Commit Distribution**: Commits are intelligently rotated across realistic project files (`src/*.py`, `docs/*.md`, `tests/test_*.py`, `config/*.json`) rather than touching a single dummy file.
+- **Conventional Commits**: Every commit uses standard Conventional Commits syntax (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `chore:`) tailored to the specific file changed.
+- **Realistic File Content**: Appends actual Python functions, test assertions, markdown documentation, and config settings instead of dummy timestamps.
 - **Custom Historical Date Ranges**: Generate commit histories across any range (`--start-date`, `--end-date`).
 - **Natural Weekday Scheduling**: Automatically filters out weekends (Saturday & Sunday) to replicate real developer work patterns.
 - **Configurable Daily Bounds**: Specify `--min-commits` and `--max-commits` to prevent unnatural volume spikes.
 - **Business Hours Distribution**: Commits are generated during realistic daylight and evening hours with randomized spacing.
-- **Dry-Run Preview**: Inspect dates, message previews, and volume counts before writing a single Git commit.
+- **Dry-Run Preview**: Inspect dates, target files, and messages before writing a single Git commit.
 - **Zero External Dependencies**: Pure Python standard library. Works out of the box with zero third-party packages.
 
 ---
@@ -32,25 +35,25 @@ A modern, customizable Python CLI tool to simulate Git commit activity and desig
 github-activity-generator/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # Automated CI test suite
+│       └── ci.yml             # Automated GitHub Actions test workflow
 ├── assets/
-│   └── demo.png               # Terminal preview screenshot
+│   └── demo.png               # Terminal execution screenshot
 ├── src/
 │   └── github_activity_generator/
 │       ├── __init__.py        # Package exports & version
-│       ├── __main__.py        # python -m execution entry
-│       ├── cli.py             # Argument parsing & formatting
-│       ├── core.py            # Scheduling engine & Git runner
-│       └── constants.py       # Configuration & message pools
+│       ├── __main__.py        # Entry for python3 -m execution
+│       ├── cli.py             # CLI parser and colored output
+│       ├── core.py            # Scheduling engine & multi-file Git runner
+│       └── constants.py       # File targets & Conventional Commit pools
 ├── tests/
 │   ├── __init__.py
-│   ├── test_cli.py            # CLI argument & date parsing tests
+│   ├── test_cli.py            # CLI argument & date parsing unit tests
 │   └── test_core.py           # Core scheduling & monotonicity tests
 ├── .gitignore
 ├── generator.py               # Root quick-start wrapper
 ├── LICENSE                    # MIT License
 ├── pyproject.toml             # Standard PEP 621 packaging
-├── README.md                  # Documentation
+├── README.md                  # Documentation with screenshot & usage guide
 └── requirements-dev.txt       # Development dependencies
 ```
 
@@ -71,7 +74,7 @@ Run directly with Python:
 # Preview schedule with dry-run
 python3 generator.py --dry-run
 
-# Run for past 90 days on weekdays
+# Run for past 90 days on weekdays across multiple files
 python3 generator.py --start-date 2026-07-01 --end-date 2026-10-18
 ```
 
@@ -93,10 +96,19 @@ github-activity-generator --start-date 2026-01-01 --end-date 2026-06-30 --min-co
 ## Usage Guide & Examples
 
 ### 1. Safe Dry-Run (Always recommended first)
-Preview planned dates and messages without touching your Git repository:
+Preview planned dates, target files, and messages without touching your Git repository:
 
 ```bash
 python3 generator.py --start-date 2026-06-01 --end-date 2026-10-18 --dry-run
+```
+
+Sample output:
+```text
+  ✔ [2026-07-20 09:02:16] CHANGELOG.md             -> docs(changelog): update release notes for v1.1 milestone
+  ✔ [2026-07-20 17:44:26] tests/test_formatter.py  -> test(formatter): add regression assertions for duration parser
+  ✔ [2026-07-20 18:45:37] src/cache.py             -> feat(cache): add LRU eviction policy with configurable TTL
+  ✔ [2026-07-20 19:45:34] config/settings.json     -> chore(config): adjust default connection pool size and timeouts
+  ✔ [2026-07-21 14:23:23] src/validators.py        -> fix(validators): sanitize unicode control characters in input
 ```
 
 ### 2. Generate Commits for a Custom Range
@@ -111,7 +123,14 @@ Specify the target repository folder using `--path`:
 python3 generator.py --path /path/to/your/repo --start-date 2026-05-01 --end-date 2026-08-31
 ```
 
-### 4. Push to GitHub
+### 4. Restrict to a Single File (Optional)
+If you prefer all commits to target a single log file instead of rotating files:
+
+```bash
+python3 generator.py --single-file activity_log.txt --start-date 2026-07-01 --end-date 2026-10-18
+```
+
+### 5. Push to GitHub
 After generation, push to your remote branch:
 
 ```bash
@@ -129,6 +148,7 @@ git push origin main
 | `--min-commits` | `int` | `2` | Minimum commits per active day |
 | `--max-commits` | `int` | `5` | Maximum commits per active day |
 | `--include-weekends` | `flag` | `False` | Include Saturday & Sunday (default: weekdays only) |
+| `--single-file` | `str` | `None` | Restrict all commits to a single file path |
 | `--dry-run` | `flag` | `False` | Preview commit plan without writing changes |
 | `--path` | `str` | `.` | Target Git repository directory |
 

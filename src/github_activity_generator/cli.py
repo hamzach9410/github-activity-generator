@@ -18,14 +18,15 @@ def parse_date(date_str: str) -> date:
 
 def print_banner():
     """Prints tool header."""
-    print("=" * 60)
+    print("=" * 65)
     print(f"  {APP_NAME} v{VERSION}")
-    print("=" * 60)
+    print("  Natural Multi-File Commits & Contribution Generator")
+    print("=" * 65)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description=f"{APP_NAME}: Create customizable Git commit histories with natural scheduling.",
+        description=f"{APP_NAME}: Create customizable, multi-file Git commit histories with natural scheduling.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -62,9 +63,15 @@ def main():
         help="Include Saturdays and Sundays (default: weekdays only)",
     )
     parser.add_argument(
+        "--single-file",
+        type=str,
+        default=None,
+        help="Restrict all commits to a single file path instead of rotating across project files",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Preview schedule without creating Git commits",
+        help="Preview schedule and target files without creating Git commits",
     )
     parser.add_argument(
         "--path",
@@ -97,34 +104,37 @@ def main():
         min_commits=args.min_commits,
         max_commits=args.max_commits,
         weekdays_only=weekdays_only,
+        single_file=args.single_file,
     )
 
     total_days = (args.end_date - args.start_date).days + 1
-    active_days = len(set(c[0].date() for c in planned))
+    active_days = len(set(c.dt.date() for c in planned))
+    unique_files = len(set(c.target_file for c in planned))
 
     print("\n📋 Plan Details:")
     print(f"  • Date Range:        {args.start_date} to {args.end_date} ({total_days} days)")
     print(f"  • Active Days:       {active_days}")
     print(f"  • Planned Commits:   {len(planned)}")
+    print(f"  • Target Files:      {unique_files} distinct files (multi-file distribution)")
     print(f"  • Weekdays Only:     {weekdays_only}")
     print(f"  • Daily Range:       {args.min_commits} - {args.max_commits} commits/day")
 
     if args.dry_run:
-        print("\n🔍 [DRY-RUN] Previewing planned commits (no changes made):")
+        print("\n🔍 [DRY-RUN] Previewing planned commits across different files (no changes made):")
         if planned:
-            for dt, msg in planned[:5]:
-                print(f"  ✔ [{dt.strftime('%Y-%m-%d %H:%M:%S')}] {msg}")
-            if len(planned) > 8:
+            for item in planned[:6]:
+                print(f"  ✔ [{item.dt.strftime('%Y-%m-%d %H:%M:%S')}] {item.target_file:<24} -> {item.message}")
+            if len(planned) > 9:
                 print("  ...")
-                for dt, msg in planned[-3:]:
-                    print(f"  ✔ [{dt.strftime('%Y-%m-%d %H:%M:%S')}] {msg}")
+                for item in planned[-3:]:
+                    print(f"  ✔ [{item.dt.strftime('%Y-%m-%d %H:%M:%S')}] {item.target_file:<24} -> {item.message}")
         print("\nExecution complete. Run without '--dry-run' to write commits.")
         return
 
-    print(f"\n🚀 Creating {len(planned)} commits in repository '{args.path}'...")
+    print(f"\n🚀 Creating {len(planned)} commits across {unique_files} files in '{args.path}'...")
     try:
         total = execute_schedule(planned, repo_path=args.path)
-        print(f"\n✅ Successfully created {total} commits!")
+        print(f"\n✅ Successfully created {total} commits across {unique_files} different project files!")
         print("Next step: Run `git push origin main` (or your target branch) to push to GitHub.")
     except Exception as e:
         print(f"\n❌ Error during execution: {e}")
